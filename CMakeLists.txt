@@ -21,12 +21,20 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/src/cmake/modules")
+
+find_package(LibXml2 REQUIRED)
+find_package(PTracking REQUIRED)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${LIBXML2_INCLUDE_DIR})
+include_directories(${PTracking_INCLUDE_DIR})
+
 file(GLOB_RECURSE PTrackerROS_src "src/*.cpp")
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
+message("PTracking libs: ${PTracking_LIBRARY}")
+
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(PTrackerROS ${PTrackerROS_src})
-#target_link_libraries(example ${PROJECT_NAME})
+rosbuild_add_executable(PTrackerROS ${PTrackerROS_src} ${PTracking_INCLUDE_DIR}/PTracker/PTracker.cpp)
+target_link_libraries(PTrackerROS ${LIBXML2_LIBRARIES} ${PTracking_LIBRARY})
