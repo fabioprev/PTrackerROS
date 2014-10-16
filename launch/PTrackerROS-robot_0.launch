@@ -15,7 +15,6 @@
 		<node name="WaypointNavigation" pkg="WaypointNavigation" type="WaypointNavigation">
 			<param name="agentId" value="0"/>
 			<param name="pathFilename" value="$(find WaypointNavigation)/config/paths/robot_0.path"/>
-			<param name="isMoveBase" value="true" />
 		</node>
 	</group>
 </launch>
