@@ -1,11 +1,21 @@
 <launch>
+	<param name="isMoveBase" value="true" />
+	
 	<group ns="robot_0">
 		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
+		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
+		<remap from="WaypointNavigation/Results" to="move_base/result" />
 		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
 			<param name="agentId" value="1" />
 			<param name="numberOfRobots" value="2" />
 			<param name="maxReading" value="20" />
+		</node>
+		
+		<node name="WaypointNavigation" pkg="WaypointNavigation" type="WaypointNavigation">
+			<param name="agentId" value="0"/>
+			<param name="pathFilename" value="$(find WaypointNavigation)/config/paths/robot_0.path"/>
+			<param name="isMoveBase" value="true" />
 		</node>
 	</group>
 </launch>
