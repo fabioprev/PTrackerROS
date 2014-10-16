@@ -1,0 +1,11 @@
+<launch>
+	<group ns="robot_0">
+		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
+		
+		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
+			<param name="agentId" value="1" />
+			<param name="numberOfRobots" value="2" />
+			<param name="maxReading" value="20" />
+		</node>
+	</group>
+</launch>

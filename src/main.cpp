@@ -7,7 +7,14 @@ int main (int argc, char** argv)
 	
 	PTrackerROS pTrackerROS;
 	
-	ros::spin();
+	while (ros::ok())
+	{
+		ros::spinOnce();
+		
+		pTrackerROS.exec();
+		
+		usleep(5e3);
+	}
 	
 	return 0;
 }
