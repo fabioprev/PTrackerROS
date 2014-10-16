@@ -88,7 +88,7 @@ void PTrackerROS::exec()
 	mutex.unlock();
 	
 	visualReading.setObservations(obs);
-	visualReading.setObservationsAgentPose(Point2of(0.0,0.0,0.0));
+	visualReading.setObservationsAgentPose(robotPose->second);
 	
 	pTracker->exec(visualReading);
 }
