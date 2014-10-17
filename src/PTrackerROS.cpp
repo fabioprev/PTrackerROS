@@ -15,6 +15,7 @@ PTrackerROS::PTrackerROS() : nodeHandle("~"), pTracker(0)
 	nodeHandle.getParam("agentId",agentId);
 	
 	subscriberObjectDetected = nodeHandle.subscribe("objectDetected",1024,&PTrackerROS::updateObjectDetected,this);
+	subscriberRobotPose = nodeHandle.subscribe("base_pose_ground_truth",1024,&PTrackerROS::updateRobotPose,this);
 	
 	pTracker = new PTracker(agentId,string(getenv("PTracking_ROOT")) + string("/../config/Stage/parameters.cfg"));
 }
@@ -28,18 +29,27 @@ void PTrackerROS::exec()
 {
 	vector<ObjectSensorReading::Observation> obs;
 	ObjectSensorReading visualReading;
+	Point2of currentRobotPose;
+	
+	mutex.lock();
+	
+	currentRobotPose = robotPose;
+	
+	mutex.unlock();
 	
 	mutexDetection.lock();
 	
 	for (vector<Object>::const_iterator it = objectDetected.begin(); it != objectDetected.end(); ++it)
 	{
 		ObjectSensorReading::Observation observation;
-	
-		observation.observation.rho = sqrt((it->x * it->x) + (it->y * it->y));
-		observation.observation.theta = atan2(it->y,it->x);
-		observation.head.x = it->x;
-		observation.head.y = it->y;
-		observation.model.barycenter = it->x;
+		
+		const Point2of& objectPose = Utils::convertRelative2Global(Point2of(it->x,it->y,0),currentRobotPose);
+		
+		observation.observation.rho = sqrt((objectPose.x * objectPose.x) + (objectPose.y * objectPose.y));
+		observation.observation.theta = atan2(objectPose.y,objectPose.x);
+		observation.head.x = objectPose.x;
+		observation.head.y = objectPose.y;
+		observation.model.barycenter = objectPose.x;
 	
 		obs.push_back(observation);
 	}
@@ -47,14 +57,11 @@ void PTrackerROS::exec()
 	mutexDetection.unlock();
 	
 	visualReading.setObservations(obs);
-	
-	mutex.lock();
-	
-	visualReading.setObservationsAgentPose(robotPose);
-	
-	mutex.unlock();
+	visualReading.setObservationsAgentPose(currentRobotPose);
 	
 	pTracker->exec(visualReading);
+	
+	objectDetected.clear();
 }
 
 void PTrackerROS::updateObjectDetected(const ObjectDetection::ConstPtr& message)

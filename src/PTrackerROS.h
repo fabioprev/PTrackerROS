@@ -13,7 +13,7 @@ class PTrackerROS
 	private:
 		std::vector<LaserScanDetector::Object> objectDetected;
 		ros::NodeHandle nodeHandle;
-		ros::Subscriber subscriberObjectDetected;
+		ros::Subscriber subscriberObjectDetected, subscriberRobotPose;
 		boost::mutex mutex, mutexDetection;
 		PTracking::Point2of robotPose;
 		PTracker* pTracker;

@@ -10,10 +10,10 @@
 		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="WaypointNavigation/Results" to="move_base/result" />
 		
-		<!--<node name="WaypointNavigation" pkg="WaypointNavigation" type="WaypointNavigation">
+		<node name="WaypointNavigation" pkg="WaypointNavigation" type="WaypointNavigation">
 			<param name="agentId" value="0"/>
 			<param name="pathFilename" value="$(find WaypointNavigation)/config/paths/robot_0.path"/>
-		</node>-->
+		</node>
 		
 		<node pkg="LaserScanDetector" name="LaserScanDetector" type="LaserScanDetector">
 			<param name="agentId" value="0" />
