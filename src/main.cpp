@@ -13,7 +13,7 @@ int main (int argc, char** argv)
 		
 		pTrackerROS.exec();
 		
-		usleep(5e3);
+		usleep(20e3);
 	}
 	
 	return 0;
