@@ -32,8 +32,6 @@ include_directories(${PTracking_INCLUDE_DIR})
 
 file(GLOB_RECURSE PTrackerROS_src "src/*.cpp")
 
-message("PTracking libs: ${PTracking_LIBRARY}")
-
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 rosbuild_add_executable(PTrackerROS ${PTrackerROS_src} ${PTracking_INCLUDE_DIR}/PTracker/PTracker.cpp)

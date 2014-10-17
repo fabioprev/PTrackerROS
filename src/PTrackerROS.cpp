@@ -127,8 +127,6 @@ void PTrackerROS::exec()
 		
 		if (checkObjectDetection(robotPose->second,it->second))
 		{
-			WARN("Object detected!!!" << endl);
-			
 			ObjectSensorReading::Observation observation;
 			
 			observation.observation.rho = sqrt((it->second.x * it->second.x) + (it->second.y * it->second.y));
@@ -139,7 +137,6 @@ void PTrackerROS::exec()
 			
 			obs.push_back(observation);
 		}
-		else DEBUG("Object NOT detected" << endl);
 	}
 	
 	mutex.unlock();
