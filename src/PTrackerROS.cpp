@@ -7,6 +7,7 @@ using namespace std;
 using namespace PTracking;
 using geometry_msgs::Quaternion;
 using nav_msgs::Odometry;
+using sensor_msgs::LaserScan;
 
 PTrackerROS::PTrackerROS() : nodeHandle("~"), pTracker(0)
 {
@@ -25,6 +26,8 @@ PTrackerROS::PTrackerROS() : nodeHandle("~"), pTracker(0)
 		subscriberRobotPoses.push_back(nodeHandle.subscribe(s.str(),1024,&PTrackerROS::updateRobotPose,this));
 	}
 	
+	subscriberLaserScan = nodeHandle.subscribe("scan",1024,&PTrackerROS::updateLaserScan,this);
+	
 	pTracker = new PTracker(agentId,string(getenv("PTracking_ROOT")) + string("/../config/Stage/parameters.cfg"));
 }
 
@@ -33,13 +36,75 @@ PTrackerROS::~PTrackerROS()
 	if (pTracker != 0) delete pTracker;
 }
 
+bool PTrackerROS::checkObjectDetection(const Point2of& robotPose, const Point2of& objectPoseGlobalFrame)
+{
+	static Point2of objectPoseRobotFrame;
+	static float cosTheta, dx, dy, robotDiameter = 0.3, sinTheta;
+	static int range = 5;
+	static int minIntervalRange, maxIntervalRange;
+	
+	dx = objectPoseGlobalFrame.x - robotPose.x;
+	dy = objectPoseGlobalFrame.y - robotPose.y;
+	
+	cosTheta = cos(robotPose.theta);
+	sinTheta = sin(robotPose.theta);
+	
+	// Target position w.r.t. the mobile frame (robot frame).
+	objectPoseRobotFrame.x =  cosTheta * dx + sinTheta * dy;
+	objectPoseRobotFrame.y = -sinTheta * dx + cosTheta * dy;
+	objectPoseRobotFrame.theta = atan2(objectPoseRobotFrame.y,objectPoseRobotFrame.x);
+	
+	mutexScan.lock();
+	
+	int index = (int) ((((objectPoseRobotFrame.theta - minScanAngle) / (maxScanAngle - minScanAngle)) * (maxScanAngle - minScanAngle)) / scanAngleIncrement);
+	
+	if ((index < 0) || (index >= NUMBER_OF_LASER_SCANS))
+	{
+		mutexScan.unlock();
+		
+		return false;
+	}
+	
+	minIntervalRange = index - range;
+	
+	if (minIntervalRange < 0) minIntervalRange = 0;
+	
+	maxIntervalRange = index + range;
+	
+	if (maxIntervalRange >= NUMBER_OF_LASER_SCANS) maxIntervalRange = NUMBER_OF_LASER_SCANS - 1;
+	
+	Point2f objectPose;
+	
+	objectPose.x = objectPoseGlobalFrame.x;
+	objectPose.y = objectPoseGlobalFrame.y;
+	
+	double theta;
+	
+	for (int i = minIntervalRange; i <= maxIntervalRange; ++i)
+	{
+		theta = minScanAngle + (scanAngleIncrement * i);
+		
+		const Point2of& scanPose = Utils::convertRelative2Global(Point2of(scanRangeData.at(i) * cos(theta),scanRangeData.at(i) * sin(theta),0),robotPose);
+		
+		if ((fabs(scanPose.x - objectPose.x) <= robotDiameter) && (fabs(scanPose.y - objectPose.y) <= robotDiameter))
+		{
+			mutexScan.unlock();
+			
+			return true;
+		}
+	}
+	
+	mutexScan.unlock();
+	
+	return false;
+}
+
 void PTrackerROS::exec()
 {
 	vector<ObjectSensorReading::Observation> obs;
 	ObjectSensorReading visualReading;
 	Point2of objectPoseRobotFrame;
 	stringstream s;
-	float cosTheta, dx, dy, sinTheta;
 	
 	/// Stage starts the robot's enumeration from 0 while PTracking from 1.
 	s << "/robot_" << (agentId - 1) << "/odom";
@@ -60,19 +125,10 @@ void PTrackerROS::exec()
 	{
 		if (it->first == s.str()) continue;
 		
-		dx = it->second.x - robotPose->second.x;
-		dy = it->second.y - robotPose->second.y;
-		
-		cosTheta = cos(robotPose->second.theta);
-		sinTheta = sin(robotPose->second.theta);
-		
-		// Target position w.r.t. the mobile frame (robot frame).
-		objectPoseRobotFrame.x =  cosTheta * dx + sinTheta * dy;
-		objectPoseRobotFrame.y = -sinTheta * dx + cosTheta * dy;
-		objectPoseRobotFrame.theta = atan2(objectPoseRobotFrame.y,objectPoseRobotFrame.x);
-		
-		if ((objectPoseRobotFrame.x > 0) && (objectPoseRobotFrame.mod() < maxReading))
+		if (checkObjectDetection(robotPose->second,it->second))
 		{
+			WARN("Object detected!!!" << endl);
+			
 			ObjectSensorReading::Observation observation;
 			
 			observation.observation.rho = sqrt((it->second.x * it->second.x) + (it->second.y * it->second.y));
@@ -83,6 +139,7 @@ void PTrackerROS::exec()
 			
 			obs.push_back(observation);
 		}
+		else DEBUG("Object NOT detected" << endl);
 	}
 	
 	mutex.unlock();
@@ -91,6 +148,20 @@ void PTrackerROS::exec()
 	visualReading.setObservationsAgentPose(robotPose->second);
 	
 	pTracker->exec(visualReading);
+}
+
+void PTrackerROS::updateLaserScan(const LaserScan::ConstPtr& message)
+{
+	mutexScan.lock();
+	
+	scanRangeData.clear();
+	
+	maxScanAngle = message->angle_max;
+	minScanAngle = message->angle_min;
+	scanAngleIncrement = message->angle_increment;
+	copy(&message->ranges[0],&message->ranges[NUMBER_OF_LASER_SCANS],back_inserter(scanRangeData));
+	
+	mutexScan.unlock();
 }
 
 void PTrackerROS::updateRobotPose(const Odometry::ConstPtr& message)

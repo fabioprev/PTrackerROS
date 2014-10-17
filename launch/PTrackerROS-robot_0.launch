@@ -3,6 +3,7 @@
 	
 	<group ns="robot_0">
 		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
+		<remap from="PTrackerROS/scan" to="scan" />
 		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="WaypointNavigation/Results" to="move_base/result" />
 		
