@@ -6,6 +6,7 @@
 		<remap from="LaserScanDetector/scan" to="scan" />
 		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="PTrackerROS/scan" to="scan" />
+		<remap from="PTrackerROS/objectDetected" to="LaserScanDetector/objectDetected" />
 		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="WaypointNavigation/Results" to="move_base/result" />
 		

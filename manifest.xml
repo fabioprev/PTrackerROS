@@ -18,4 +18,5 @@
 	</url>
 	
 	<depend package="roscpp"/>
+	<depend package="LaserScanDetector"/>
 </package>
