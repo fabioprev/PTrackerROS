@@ -21,6 +21,10 @@
 			<param name="maxReading" value="20" />
 		</node>
 		
+		<node name="PTrackingBridge" pkg="PTrackingBridge" type="PTrackingBridge">
+			<param name="agentPort" value="11001"/>
+		</node>
+		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
 			<param name="agentId" value="1" />
 			<param name="numberOfRobots" value="2" />
