@@ -1,13 +1,17 @@
 <launch>
 	<group ns="robot_1">
-		<remap from="LaserScanDetector/base_pose_ground_truth" to="base_pose_ground_truth" />
+		<remap from="Coordinator/targetEstimations" to="PTrackingBridge/targetEstimations" />
 		<remap from="LaserScanDetector/scan" to="scan" />
-		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="PTrackerROS/scan" to="scan" />
 		<remap from="PTrackerROS/objectDetected" to="LaserScanDetector/objectDetected" />
-		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="WaypointNavigation/Results" to="move_base/result" />
 		
+		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
+		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
+		<!--
+		<remap from="PTrackerROS/base_pose_ground_truth" to="amcl_pose" />
+		<remap from="WaypointNavigation/base_pose_ground_truth" to="amcl_pose" />
+		-->
 		<node name="WaypointNavigation" pkg="WaypointNavigation" type="WaypointNavigation">
 			<param name="agentId" value="1"/>
 			<param name="pathFilename" value="$(find WaypointNavigation)/config/paths/robot_1.path"/>
@@ -22,6 +26,8 @@
 		<node name="PTrackingBridge" pkg="PTrackingBridge" type="PTrackingBridge">
 			<param name="agentPort" value="11002"/>
 		</node>
+		
+		<node name="Coordinator" pkg="Coordinator" type="Coordinator" />
 		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
 			<param name="agentId" value="2" />

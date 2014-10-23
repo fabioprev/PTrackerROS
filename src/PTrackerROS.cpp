@@ -6,6 +6,7 @@
 using namespace std;
 using namespace PTracking;
 using geometry_msgs::Quaternion;
+using geometry_msgs::PoseWithCovarianceStamped;
 using nav_msgs::Odometry;
 using LaserScanDetector::ObjectDetection;
 using LaserScanDetector::Object;
@@ -45,8 +46,8 @@ void PTrackerROS::exec()
 		
 		const Point2of& objectPose = Utils::convertRelative2Global(Point2of(it->x,it->y,0),currentRobotPose);
 		
-		observation.observation.rho = sqrt((objectPose.x * objectPose.x) + (objectPose.y * objectPose.y));
-		observation.observation.theta = atan2(objectPose.y,objectPose.x);
+		observation.observation.x = objectPose.x;
+		observation.observation.y = objectPose.y;
 		observation.head.x = objectPose.x;
 		observation.head.y = objectPose.y;
 		observation.model.barycenter = objectPose.x;
@@ -73,19 +74,38 @@ void PTrackerROS::updateObjectDetected(const ObjectDetection::ConstPtr& message)
 	mutexDetection.unlock();
 }
 
-void PTrackerROS::updateRobotPose(const Odometry::ConstPtr& message)
-{
-	double roll, pitch, yaw;
+#ifndef LOCALIZER
+	void PTrackerROS::updateRobotPose(const Odometry::ConstPtr& message)
+	{
+		double roll, pitch, yaw;
 	
-	const Quaternion& q = message->pose.pose.orientation;
+		const Quaternion& q = message->pose.pose.orientation;
 	
-	tf::Matrix3x3(tf::Quaternion(q.x,q.y,q.z,q.w)).getRPY(roll,pitch,yaw);
+		tf::Matrix3x3(tf::Quaternion(q.x,q.y,q.z,q.w)).getRPY(roll,pitch,yaw);
 	
-	mutex.lock();
+		mutex.lock();
 	
-	robotPose.x = message->pose.pose.position.x;
-	robotPose.y = message->pose.pose.position.y;
-	robotPose.theta = yaw;
+		robotPose.x = message->pose.pose.position.x;
+		robotPose.y = message->pose.pose.position.y;
+		robotPose.theta = yaw;
 	
-	mutex.unlock();
-}
+		mutex.unlock();
+	}
+#else
+	void PTrackerROS::updateRobotPose(const PoseWithCovarianceStamped::ConstPtr& message)
+	{
+		double roll, pitch, yaw;
+		
+		const Quaternion& q = message->pose.pose.orientation;
+		
+		tf::Matrix3x3(tf::Quaternion(q.x,q.y,q.z,q.w)).getRPY(roll,pitch,yaw);
+		
+		mutex.lock();
+		
+		robotPose.x = message->pose.pose.position.x;
+		robotPose.y = message->pose.pose.position.y;
+		robotPose.theta = yaw;
+		
+		mutex.unlock();
+	}
+#endif
