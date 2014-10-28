@@ -24,6 +24,7 @@
 			<param name="agentId" value="0" />
 			<param name="numberOfRobots" value="3" />
 			<param name="maxReading" value="20" />
+			<param name="groundtruthDir" value="$(find LaserScanDetector)/groundtruth"/>
 		</node>
 		
 		<node name="PTrackingBridge" pkg="PTrackingBridge" type="PTrackingBridge">
