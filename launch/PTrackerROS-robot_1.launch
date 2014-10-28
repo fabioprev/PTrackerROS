@@ -1,5 +1,6 @@
 <launch>
 	<group ns="robot_1">
+		<remap from="Coordinator/PointsListString" to="WaypointNavigation/PointsListString" />
 		<remap from="Coordinator/targetEstimations" to="PTrackingBridge/targetEstimations" />
 		<remap from="LaserScanDetector/scan" to="scan" />
 		<remap from="PTrackerROS/scan" to="scan" />
@@ -19,7 +20,7 @@
 		
 		<node pkg="LaserScanDetector" name="LaserScanDetector" type="LaserScanDetector">
 			<param name="agentId" value="1" />
-			<param name="numberOfRobots" value="2" />
+			<param name="numberOfRobots" value="3" />
 			<param name="maxReading" value="20" />
 		</node>
 		
@@ -27,11 +28,13 @@
 			<param name="agentPort" value="11002"/>
 		</node>
 		
-		<node name="Coordinator" pkg="Coordinator" type="Coordinator" />
+		<node name="Coordinator" pkg="Coordinator" type="Coordinator">
+			<param name="agentId" value="2" />
+		</node>
 		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
 			<param name="agentId" value="2" />
-			<param name="numberOfRobots" value="2" />
+			<param name="numberOfRobots" value="3" />
 			<param name="maxReading" value="20" />
 		</node>
 	</group>
