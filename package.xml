@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+	<name>PTrackerROS</name>
+	<version>0.0.0</version>
+	<description>The PTrackerROS package</description>
+	<maintainer email="previtali@dis.uniroma1.it">Fabio Previtali</maintainer>
+	<license>LGPL v. 3.0</license>
+	
+	<buildtool_depend>catkin</buildtool_depend>
+	
+	<build_depend>roscpp</build_depend>
+	<build_depend>LaserScanDetector</build_depend>
+	
+	<run_depend>roscpp</run_depend>
+	<run_depend>LaserScanDetector</run_depend>
+</package>
