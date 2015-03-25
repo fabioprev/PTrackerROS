@@ -11,8 +11,7 @@ find_package(LibXml2 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(PTracking REQUIRED)
 
-catkin_package(CATKIN_DEPENDS roscpp
-					  DEPENDS LaserScanDetector
+catkin_package(CATKIN_DEPENDS LaserScanDetector
 					  DEPENDS LibXml2
 					  DEPENDS OpenCV
 					  DEPENDS PTracking
