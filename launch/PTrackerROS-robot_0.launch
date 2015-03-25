@@ -29,7 +29,6 @@
 			<param name="groundtruthDir" value="$(find LaserScanDetector)/groundtruth"/>
 		</node>
 		
-		<!--
 		<node name="PTrackingBridge" pkg="PTrackingBridge" type="PTrackingBridge">
 			<param name="agentPort" value="11001"/>
 		</node>
@@ -37,13 +36,11 @@
 		<node name="Coordinator" pkg="Coordinator" type="Coordinator">
 			<param name="agentId" value="1" />
 		</node>
-		-->
-		<!--
+		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
 			<param name="agentId" value="1" />
 			<param name="numberOfRobots" value="3" />
 			<param name="maxReading" value="20" />
 		</node>
-		-->
 	</group>
 </launch>
