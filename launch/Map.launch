@@ -1,0 +1,7 @@
+<launch>
+	<arg name="map_name"  default="DIAG_B1"/>
+	
+	<node pkg="map_server" type="map_server" name="map_server" args="$(find WaypointNavigation)/maps/$(arg map_name).yaml" respawn="false" >
+		<param name="frame_id" value="/map" />
+	</node>
+</launch>

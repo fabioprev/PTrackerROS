@@ -1,9 +1,9 @@
 <launch>
-	<arg name="robot_name" default="robot1" />
-	<arg name="agentId" default="1"/>
+	<arg name="robot_name" default="robot2" />
+	<arg name="agentId" default="2"/>
 	<arg name="map_name"  default="DIAG_B1"/>
-	<arg name="init_x" default="18.0" />
-	<arg name="init_y" default="2.0" />
+	<arg name="init_x" default="27.5" />
+	<arg name="init_y" default="6.0" />
 	<arg name="init_a" default="0.0" />
 	<arg name="init_cov" default="0.25" />
 	<arg name="single_robot" default="false"/>
@@ -96,15 +96,15 @@
 		</node>
 		
 		<node name="PTrackingBridge" pkg="PTrackingBridge" type="PTrackingBridge">
-			<param name="agentPort" value="11002"/>
+			<param name="agentPort" value="11003"/>
 		</node>
 		
 		<node name="Coordinator" pkg="Coordinator" type="Coordinator">
-			<param name="agentId" value="2" />
+			<param name="agentId" value="3" />
 		</node>
 		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
-			<param name="agentId" value="2" />
+			<param name="agentId" value="3" />
 			<param name="numberOfRobots" value="3" />
 			<param name="maxReading" value="20" />
 		</node>
