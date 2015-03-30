@@ -30,9 +30,9 @@
 		<remap from="PTrackerROS/scan" to="scan" />
 		<remap from="PTrackerROS/objectDetected" to="LaserScanDetector/objectDetected" />
 		<remap from="PTrackingBridge/targetEstimations" to="Coordinator/targetEstimations" />
-		<remap from="WaypointNavigation/Results" to="move_base/result" />
-		<remap from="WaypointNavigation/PointsListString" to="Coordinator/targetChased" /> 
 		<remap from="WaypointNavigation/CommandLoad" to="Coordinator/commandLoad" />
+		<remap from="WaypointNavigation/Results" to="move_base/result" />
+		<remap from="WaypointNavigation/PointsListString" to="Coordinator/PointsListString" />
 		
 		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
 		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
