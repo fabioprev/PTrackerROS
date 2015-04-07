@@ -25,5 +25,5 @@ include_directories(${PTracking_INCLUDE_DIR})
 
 file(GLOB_RECURSE PTrackerROS_src "src/*.cpp")
 
-add_executable(PTrackerROS ${PTrackerROS_src} ${PTracking_INCLUDE_DIR}/PTracker/PTracker.cpp)
+add_executable(PTrackerROS ${PTrackerROS_src})
 target_link_libraries(PTrackerROS ${catkin_LIBRARIES} ${LIBXML2_LIBRARIES} ${OpenCV_LIBS} ${PTracking_LIBRARY})

@@ -15,6 +15,7 @@ class PTracker;
 class PTrackerROS
 {
 	private:
+		std::map<int,std::pair<int,std::pair<int,int> > > colorMap;
 		std::vector<LaserScanDetector::Object> objectDetected;
 		ros::NodeHandle nodeHandle;
 		ros::Subscriber subscriberObjectDetected, subscriberRobotPose;
