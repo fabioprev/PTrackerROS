@@ -1,10 +1,12 @@
 #include "PTrackerROS.h"
+#include <Manfield/ConfigFile/ConfigFile.h>
 #include <PTracker/PTracker.h>
 #include <Utils/Utils.h>
 #include <tf/LinearMath/Matrix3x3.h>
 
 using namespace std;
 using namespace PTracking;
+using GMapping::ConfigFile;
 using geometry_msgs::Quaternion;
 using geometry_msgs::PoseWithCovarianceStamped;
 using nav_msgs::Odometry;
@@ -14,6 +16,7 @@ using LaserScanDetector::Object;
 PTrackerROS::PTrackerROS() : nodeHandle("~"), pTracker(0)
 {
 	nodeHandle.getParam("agentId",agentId);
+	nodeHandle.getParam("setupFile",setupFile);
 	
 	subscriberObjectDetected = nodeHandle.subscribe("objectDetected",1024,&PTrackerROS::updateObjectDetected,this);
 	subscriberRobotPose = nodeHandle.subscribe("base_pose_ground_truth",1024,&PTrackerROS::updateRobotPose,this);
@@ -32,11 +35,187 @@ PTrackerROS::PTrackerROS() : nodeHandle("~"), pTracker(0)
 			}
 		}
 	}
+	
+	configure(setupFile);
 }
 
 PTrackerROS::~PTrackerROS()
 {
 	if (pTracker != 0) delete pTracker;
+}
+
+void PTrackerROS::addArtificialNoise(vector<ObjectSensorReading::Observation>& obs) const
+{
+	if (isGaussianNoise)
+	{
+		for (vector<ObjectSensorReading::Observation>::iterator it = obs.begin(); it != obs.end(); ++it)
+		{
+			it->observation.x += gaussianNoise(gaussianNoiseX,0.3);
+			it->observation.y += gaussianNoise(gaussianNoiseY,0.3);
+		}
+	}
+	
+	if ((falsePositiveBurstTime > 0.0) && (falsePositiveObservations > 0.0))
+	{
+		static const int TIME_TO_WAIT_BEFORE_NEXT_BURST = 10000 - falsePositiveBurstTime;
+		
+		static vector<ObjectSensorReading::Observation> falseObservations;
+		static Timestamp initialTimestamp, initialTimestampBurst;
+		static bool isBurstTime = false, isGenerationTime = true;
+		
+		if (isBurstTime)
+		{
+			if ((Timestamp() - initialTimestampBurst).getMs() < falsePositiveBurstTime)
+			{
+				if (isGenerationTime)
+				{
+					falseObservations.clear();
+					
+					isGenerationTime = false;
+					
+					for (int i = 1; i <= falsePositiveObservations; ++i)
+					{
+						ObjectSensorReading::Observation falseObservation;
+						
+						falseObservation.observation.x = Utils::randr(worldSizeX);
+						falseObservation.observation.y = Utils::randr(worldSizeY);
+						falseObservation.head.x = falseObservation.observation.x;
+						falseObservation.head.y = falseObservation.observation.y;
+						falseObservation.model.barycenter = falseObservation.observation.x;
+						
+						falseObservations.push_back(falseObservation);
+					}
+				}
+				
+				for (vector<ObjectSensorReading::Observation>::const_iterator it = falseObservations.begin(); it != falseObservations.end(); ++it)
+				{
+					ObjectSensorReading::Observation falseObservation;
+					
+					falseObservation.observation.x = it->observation.x + gaussianNoise(gaussianNoiseX,0.3);
+					falseObservation.observation.y = it->observation.y + gaussianNoise(gaussianNoiseY,0.3);
+					
+					obs.push_back(falseObservation);
+				}
+			}
+			else
+			{
+				initialTimestamp.setToNow();
+				isBurstTime = false;
+			}
+		}
+		else
+		{
+			if ((TIME_TO_WAIT_BEFORE_NEXT_BURST - (Timestamp() - initialTimestamp).getMs()) < 0.0)
+			{
+				initialTimestampBurst.setToNow();
+				isBurstTime = true;
+				isGenerationTime = true;
+			}
+		}
+	}
+}
+
+void PTrackerROS::configure(const string& filename)
+{
+	ConfigFile fCfg;
+	string key, section, temp;
+	float worldXMin, worldXMax, worldYMin, worldYMax;
+	
+	if (!fCfg.read(filename))
+	{
+		ERR("Error reading file '" << filename << "' for PTrackerROS configuration. Exiting..." << endl);
+		
+		exit(-1);
+	}
+	
+	try
+	{
+		section = "Observation";
+		
+		key = "gaussianNoise";
+		isGaussianNoise = fCfg.value(section,key);
+		
+		key = "gaussianNoiseX";
+		gaussianNoiseX = fCfg.value(section,key);
+		
+		key = "gaussianNoiseY";
+		gaussianNoiseY = fCfg.value(section,key);
+		
+		key = "gaussianNoiseTheta";
+		gaussianNoiseTheta = fCfg.value(section,key);
+		
+		key = "falsePositiveBurstTime";
+		falsePositiveBurstTime = fCfg.value(section,key);
+		
+		key = "falsePositiveObservations";
+		falsePositiveObservations = fCfg.value(section,key);
+		
+		key = "trueNegativeBurstTime";
+		trueNegativeBurstTime = fCfg.value(section,key);
+		
+		key = "trueNegativeObservations";
+		trueNegativeObservations = fCfg.value(section,key);
+	}
+	catch (...)
+	{
+		ERR("Not existing value '" << section << "/" << key << "'. Exiting..." << endl);
+		
+		exit(-1);
+	}
+	
+	if (!fCfg.read(string(getenv("PTracking_ROOT")) + string("/../config/Stage/parameters.cfg")))
+	{
+		ERR("Error reading file '" << string(getenv("PTracking_ROOT")) + string("/../config/Stage/parameters.cfg") << "' for PTrackerROS configuration. Exiting..." << endl);
+		
+		exit(-1);
+	}
+	
+	try
+	{
+		section = "location";
+		
+		key = "worldXMin";
+		temp = string(fCfg.value(section,key));
+		
+		if (temp == "-inf") worldXMin = -FLT_MAX;
+		else worldXMin = atof(temp.c_str());
+		
+		key = "worldXMax";
+		temp = string(fCfg.value(section,key));
+		
+		if (temp == "inf") worldXMax = FLT_MAX;
+		else worldXMax = atof(temp.c_str());
+		
+		key = "worldYMin";
+		temp = string(fCfg.value(section,key));
+		
+		if (temp == "-inf") worldYMin = -FLT_MAX;
+		else worldYMin = atof(temp.c_str());
+		
+		key = "worldYMax";
+		temp = string(fCfg.value(section,key));
+		
+		if (temp == "inf") worldYMax = FLT_MAX;
+		else worldYMax = atof(temp.c_str());
+		
+		worldSizeX = worldXMax - worldXMin;
+		worldSizeY = worldYMax - worldYMin;
+	}
+	catch (...)
+	{
+		ERR("Not existing value '" << section << "/" << key << "'. Exiting..." << endl);
+		
+		exit(-1);
+	}
+	
+	ERR(endl << "******************************************************" << endl);
+	DEBUG("PTrackerROS parameters:" << endl);
+	
+	INFO("\tGaussian noise: [" << gaussianNoiseX << "," << gaussianNoiseY << "," << gaussianNoiseTheta << "]" << endl);
+	WARN("\tFalse positive burst time: " << falsePositiveBurstTime << " (in ms)" << endl);
+	WARN("\tNumber of false positive observations: " << falsePositiveObservations << endl);
+	DEBUG("\tTrue negative burst time: " << trueNegativeBurstTime << " (in ms)" << endl);
+	DEBUG("\tNumber of true negative observations: " << trueNegativeObservations << endl);
 }
 
 void PTrackerROS::exec()
@@ -78,6 +257,8 @@ void PTrackerROS::exec()
 	}
 	
 	mutexDetection.unlock();
+	
+	addArtificialNoise(obs);
 	
 	visualReading.setObservations(obs);
 	visualReading.setObservationsAgentPose(currentRobotPose);

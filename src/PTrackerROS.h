@@ -22,13 +22,28 @@ class PTrackerROS
 		boost::mutex mutex, mutexDetection;
 		PTracking::Point2of robotPose;
 		PTracker* pTracker;
+		std::string setupFile;
+		float gaussianNoiseX, gaussianNoiseY, gaussianNoiseTheta, falsePositiveBurstTime, falsePositiveObservations, trueNegativeBurstTime, trueNegativeObservations, worldSizeX, worldSizeY;
 		int agentId;
+		bool isGaussianNoise;
+		
+		void addArtificialNoise(std::vector<PTracking::ObjectSensorReading::Observation>& obs) const;
+		
+		inline float gaussianNoise(float mean, float sigma) const
+		{
+			static boost::mt19937 rng;
+			static boost::normal_distribution<> nd(mean,sigma);
+			static boost::variate_generator<boost::mt19937&,boost::normal_distribution<> > var_nor(rng,nd);
+			
+			return var_nor();
+		}
 		
 	public:
 		PTrackerROS();
 		
 		virtual ~PTrackerROS();
 		
+		void configure(const std::string& filename);
 		void exec();
 		void updateObjectDetected(const LaserScanDetector::ObjectDetection::ConstPtr& message);
 		

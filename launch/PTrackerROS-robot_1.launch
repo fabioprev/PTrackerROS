@@ -92,7 +92,7 @@
 		
 		<node pkg="LaserScanDetector" name="LaserScanDetector" type="LaserScanDetector">
 			<param name="agentId" value="$(arg agentId)" />
-			<param name="groundtruthDir" value="$(find LaserScanDetector)/groundtruth"/>
+			<param name="groundtruthDir" value="$(find LaserScanDetector)/groundtruth" />
 			<param name="maxReading" value="20" />
 			<param name="numberOfRobots" value="3" />
 			<param name="startingPreyRobot" value="3" />
@@ -109,8 +109,7 @@
 		
 		<node pkg="PTrackerROS" name="PTrackerROS" type="PTrackerROS">
 			<param name="agentId" value="2" />
-			<param name="numberOfRobots" value="3" />
-			<param name="maxReading" value="20" />
+			<param name="setupFile" value="$(find PTrackerROS)/config/setup.cfg" />
 		</node>
 		
 		<node name="link_broadcaster_2" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /$(arg robot_name)/base_link /$(arg robot_name)/base_frame 0.2" />
