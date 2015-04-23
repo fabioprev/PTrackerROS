@@ -22,12 +22,12 @@ class PTrackerROS
 		boost::mutex mutex, mutexDetection;
 		PTracking::Point2of robotPose;
 		PTracker* pTracker;
-		std::string setupFile;
-		float gaussianNoiseX, gaussianNoiseY, gaussianNoiseTheta, falsePositiveBurstTime, falsePositiveObservations, trueNegativeBurstTime, trueNegativeObservations, worldSizeX, worldSizeY;
-		int agentId;
+		std::string distortion, setupFile;
+		float gaussianNoiseX, gaussianNoiseY, gaussianNoiseTheta, falsePositiveBurstTime, startingDistortionDistance, trueNegativeBurstTime, worldSizeX, worldSizeY;
+		int agentId, falsePositiveObservations, trueNegativeObservations;
 		bool isGaussianNoise;
 		
-		void addArtificialNoise(std::vector<PTracking::ObjectSensorReading::Observation>& obs) const;
+		void addArtificialNoise(std::vector<PTracking::ObjectSensorReading::Observation>& obs);
 		
 		inline float gaussianNoise(float mean, float sigma) const
 		{

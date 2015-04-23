@@ -44,8 +44,9 @@ PTrackerROS::~PTrackerROS()
 	if (pTracker != 0) delete pTracker;
 }
 
-void PTrackerROS::addArtificialNoise(vector<ObjectSensorReading::Observation>& obs) const
+void PTrackerROS::addArtificialNoise(vector<ObjectSensorReading::Observation>& obs)
 {
+	/// Adding Gaussian noise to observations.
 	if (isGaussianNoise)
 	{
 		for (vector<ObjectSensorReading::Observation>::iterator it = obs.begin(); it != obs.end(); ++it)
@@ -55,7 +56,8 @@ void PTrackerROS::addArtificialNoise(vector<ObjectSensorReading::Observation>& o
 		}
 	}
 	
-	if ((falsePositiveBurstTime > 0.0) && (falsePositiveObservations > 0.0))
+	/// Adding false positive observations for a burst period of time equals to falsePositiveBurstTime.
+	if ((falsePositiveBurstTime > 0.0) && (falsePositiveObservations > 0))
 	{
 		static const int TIME_TO_WAIT_BEFORE_NEXT_BURST = 10000 - falsePositiveBurstTime;
 		
@@ -113,6 +115,35 @@ void PTrackerROS::addArtificialNoise(vector<ObjectSensorReading::Observation>& o
 			}
 		}
 	}
+	
+	if (strcasecmp(distortion.c_str(),"none") != 0)
+	{
+		Point2of currentRobotPose;
+		
+		mutex.lock();
+		
+		currentRobotPose = robotPose;
+		
+		mutex.unlock();
+		
+		/// Adding sensor's distortion. Set this parameter to 'none' for having an ideal sensor.
+		for (vector<ObjectSensorReading::Observation>::iterator it = obs.begin(); it != obs.end(); ++it)
+		{
+			if (strcasecmp(distortion.c_str(),"linear") == 0)
+			{
+				float displacementX, displacementY;
+				
+				displacementX = currentRobotPose.x - it->observation.x;
+				displacementY = currentRobotPose.y - it->observation.y;
+				
+				if (sqrt(pow(displacementX,2) + pow(displacementY,2)) > startingDistortionDistance)
+				{
+					it->observation.x += (displacementX * 0.1);
+					it->observation.y += (displacementY * 0.1);
+				}
+			}
+		}
+	}
 }
 
 void PTrackerROS::configure(const string& filename)
@@ -130,6 +161,14 @@ void PTrackerROS::configure(const string& filename)
 	
 	try
 	{
+		section = "Sensor";
+		
+		key = "distortion";
+		distortion = string(fCfg.value(section,key));
+		
+		key = "startingDistortionDistance";
+		startingDistortionDistance = fCfg.value(section,key);
+		
 		section = "Observation";
 		
 		key = "gaussianNoise";
@@ -258,7 +297,23 @@ void PTrackerROS::exec()
 	
 	mutexDetection.unlock();
 	
+	INFO("Obs (before): " << endl);
+	
+	for (vector<ObjectSensorReading::Observation>::iterator it = obs.begin(); it != obs.end(); ++it)
+	{
+		WARN("[" << it->observation.x << "," << it->observation.y << "]" << endl);
+	}
+	
 	addArtificialNoise(obs);
+	
+	LOG("Obs (before): " << endl);
+	
+	for (vector<ObjectSensorReading::Observation>::iterator it = obs.begin(); it != obs.end(); ++it)
+	{
+		DEBUG("[" << it->observation.x << "," << it->observation.y << "]" << endl);
+	}
+	
+	ERR("*********************************************" << endl);
 	
 	visualReading.setObservations(obs);
 	visualReading.setObservationsAgentPose(currentRobotPose);
