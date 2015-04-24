@@ -9,7 +9,6 @@ using namespace PTracking;
 using GMapping::ConfigFile;
 using geometry_msgs::Quaternion;
 using geometry_msgs::PoseWithCovarianceStamped;
-using nav_msgs::Odometry;
 using LaserScanDetector::ObjectDetection;
 using LaserScanDetector::Object;
 
@@ -19,7 +18,7 @@ PTrackerROS::PTrackerROS() : nodeHandle("~"), pTracker(0)
 	nodeHandle.getParam("setupFile",setupFile);
 	
 	subscriberObjectDetected = nodeHandle.subscribe("objectDetected",1024,&PTrackerROS::updateObjectDetected,this);
-	subscriberRobotPose = nodeHandle.subscribe("base_pose_ground_truth",1024,&PTrackerROS::updateRobotPose,this);
+	subscriberRobotPose = nodeHandle.subscribe("base_pose",1024,&PTrackerROS::updateRobotPose,this);
 	
 	pTracker = new PTracker(agentId,string(getenv("PTracking_ROOT")) + string("/../config/Stage/parameters.cfg"));
 	
@@ -351,7 +350,7 @@ void PTrackerROS::updateObjectDetected(const ObjectDetection::ConstPtr& message)
 	
 	mutexDetection.unlock();
 }
-
+/*
 #ifndef LOCALIZER
 	void PTrackerROS::updateRobotPose(const Odometry::ConstPtr& message)
 	{
@@ -369,7 +368,7 @@ void PTrackerROS::updateObjectDetected(const ObjectDetection::ConstPtr& message)
 		
 		mutex.unlock();
 	}
-#else
+#else*/
 	void PTrackerROS::updateRobotPose(const PoseWithCovarianceStamped::ConstPtr& message)
 	{
 		double roll, pitch, yaw;
@@ -386,4 +385,4 @@ void PTrackerROS::updateObjectDetected(const ObjectDetection::ConstPtr& message)
 		
 		mutex.unlock();
 	}
-#endif
+//#endif

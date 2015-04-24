@@ -34,13 +34,9 @@
 		<remap from="WaypointNavigation/Results" to="move_base/result" />
 		<remap from="WaypointNavigation/PointsListString" to="Coordinator/PointsListString" />
 		
-		<remap from="Coordinator/base_pose_ground_truth" to="base_pose_ground_truth" />
-		<remap from="PTrackerROS/base_pose_ground_truth" to="base_pose_ground_truth" />
-		<remap from="WaypointNavigation/base_pose_ground_truth" to="base_pose_ground_truth" />
-		<!--
-		<remap from="PTrackerROS/base_pose_ground_truth" to="amcl_pose" />
-		<remap from="WaypointNavigation/base_pose_ground_truth" to="amcl_pose" />
-		-->
+		<remap from="Coordinator/base_pose" to="amcl_pose" />
+		<remap from="PTrackerROS/base_pose" to="amcl_pose" />
+		<remap from="WaypointNavigation/base_pose" to="amcl_pose" />
 		
 		<!-- AMCL -->
 		<node pkg="amcl" type="amcl" name="amcl" respawn="true">
