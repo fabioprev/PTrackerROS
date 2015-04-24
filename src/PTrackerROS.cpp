@@ -161,6 +161,17 @@ void PTrackerROS::configure(const string& filename)
 	
 	try
 	{
+		section = "Network";
+		
+		key = "networkCoverage";
+		temp = string(fCfg.value(section,key));
+		
+		if (temp == "inf") networkCoverage = INT_MAX;
+		else networkCoverage = atoi(temp.c_str());
+		
+		key = "packetLossProbability";
+		packetLossProbability = fCfg.value(section,key);
+		
 		section = "Sensor";
 		
 		key = "distortion";
@@ -250,6 +261,12 @@ void PTrackerROS::configure(const string& filename)
 	ERR(endl << "******************************************************" << endl);
 	DEBUG("PTrackerROS parameters:" << endl);
 	
+	if (networkCoverage == INT_MAX) INFO("\tNetwork coverage: inf" << endl)
+	else INFO("\tNetwork coverage: " << networkCoverage << " (in meters)" << endl)
+	
+	WARN("\tProbability to loss a packet: " << packetLossProbability << endl);
+	LOG("\tSensor distortion: " << distortion << endl);
+	LOG("\tStarting distortion distance: " << startingDistortionDistance << endl);
 	INFO("\tGaussian noise: [" << gaussianNoiseX << "," << gaussianNoiseY << "," << gaussianNoiseTheta << "]" << endl);
 	WARN("\tFalse positive burst time: " << falsePositiveBurstTime << " (in ms)" << endl);
 	WARN("\tNumber of false positive observations: " << falsePositiveObservations << endl);
@@ -297,6 +314,7 @@ void PTrackerROS::exec()
 	
 	mutexDetection.unlock();
 	
+#if 0
 	INFO("Obs (before): " << endl);
 	
 	for (vector<ObjectSensorReading::Observation>::iterator it = obs.begin(); it != obs.end(); ++it)
@@ -314,10 +332,12 @@ void PTrackerROS::exec()
 	}
 	
 	ERR("*********************************************" << endl);
+#endif
 	
 	visualReading.setObservations(obs);
 	visualReading.setObservationsAgentPose(currentRobotPose);
 	
+	pTracker->setNetworkModel(networkCoverage,packetLossProbability);
 	pTracker->exec(visualReading);
 	
 	objectDetected.clear();

@@ -23,8 +23,8 @@ class PTrackerROS
 		PTracking::Point2of robotPose;
 		PTracker* pTracker;
 		std::string distortion, setupFile;
-		float gaussianNoiseX, gaussianNoiseY, gaussianNoiseTheta, falsePositiveBurstTime, startingDistortionDistance, trueNegativeBurstTime, worldSizeX, worldSizeY;
-		int agentId, falsePositiveObservations, trueNegativeObservations;
+		float gaussianNoiseX, gaussianNoiseY, gaussianNoiseTheta, falsePositiveBurstTime, packetLossProbability, startingDistortionDistance, trueNegativeBurstTime, worldSizeX, worldSizeY;
+		int agentId, falsePositiveObservations, networkCoverage, trueNegativeObservations;
 		bool isGaussianNoise;
 		
 		void addArtificialNoise(std::vector<PTracking::ObjectSensorReading::Observation>& obs);
